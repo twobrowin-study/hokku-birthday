@@ -3,7 +3,6 @@ phonenumbers
 https://github.com/nithinmurali/pygsheets/archive/staging.zip
 pyTelegramBotAPI
 aiohttp
-flask
 XlsxWriter
 sqlalchemy
 setuptools

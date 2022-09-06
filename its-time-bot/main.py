@@ -1,5 +1,3 @@
-from flask import Flask
-
 from random import randint
 from datetime import datetime
 
@@ -48,18 +46,6 @@ def send_hb():
          else:
             Bot.send_message(id, caption)
 
-app = Flask(__name__)
-@app.route('/itstime')
-def itstime():
-   send_hb()
-   return '200 OK'
-def create_app():
-   return app
-
-if __name__ == '__main__':
-   if len(sys.argv) > 1 and sys.argv[1] == 'flask':
-      print("\n{}: Running in flask mode".format(datetime.now()))
-      app.run(debug=True)
-   else:
-      print("\n{}: Running in normal mode".format(datetime.now()))
-      send_hb()
+print("\n{}: Start sending hokku hb".format(datetime.now()))
+send_hb()
+print("\n{}: Done sending hokku hb".format(datetime.now()))

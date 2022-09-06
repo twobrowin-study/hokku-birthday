@@ -5,7 +5,7 @@ ENV TZ 'Europe/Moscow'
 
 RUN apt-get update && apt-get install -y python3 python3-psycopg2 \
     libpq-dev python3-waitress python3-setuptools python3-pandas \
-    python3-sqlalchemy python3-flask python3-xlsxwriter cron
+    python3-sqlalchemy python3-xlsxwriter cron
 
 COPY requirenments.txt /
 RUN pip3 install -r /requirenments.txt

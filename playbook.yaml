@@ -26,10 +26,10 @@
   vars_files:
     - secrets.yaml
   tasks:
-    - name: Run dol baumanec syb docker container
+    - name: Run docker container
       docker_container:
         name: hokku-birthday
-        image: hokku-birthday:latest
+        image: hokku-birthday:1.1.1
         state: started
         detach: yes
         restart: yes
@@ -50,5 +50,5 @@
           SHEET_MAIN_TEXT_TEXT: 'Текст'
           SHEET_TO_WHOM_SEND: 'Каналы для отправки'
           SHEET_TO_WHOM_SEND_ID: 'Telegram ID'
-          CRON_TIME: '00 09 * * *'
+          CRON_TIME: '15 09 * * *'
     

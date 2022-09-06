@@ -1,4 +1,6 @@
+import asyncio
 from bot import Bot
 
-if __name__ == '__main__':
-    Bot.polling(non_stop=True)
+loop = asyncio.get_event_loop()
+asyncio.ensure_future(Bot.polling(non_stop=True))
+loop.run_forever()
