@@ -1,0 +1,20 @@
+BOT_TOKEN=''
+
+SHEETS_ACC_JSON=''
+SHEETS_NAME='Таблица для бота дней рождений в Пивном Петушке'
+
+SHEET_HBS='Дни рождения'
+SHEET_HBS_NAME='Род. падеж имени'
+SHEET_HBS_DATE='Дата рождения'
+
+SHEET_EMOJI='Emoji'
+SHEET_HOKKU='Строчки Хокку'
+
+SHEET_MAIN_TEXT='Основной текст'
+SHEET_MAIN_TEXT_CONDITION='Условие'
+SHEET_MAIN_TEXT_CONDITION_ONE='Одно ДР'
+SHEET_MAIN_TEXT_CONDITION_MANY='Несколько ДР'
+SHEET_MAIN_TEXT_TEXT='Текст'
+
+SHEET_TO_WHOM_SEND='Каналы для отправки'
+SHEET_TO_WHOM_SEND_ID='Telegram ID'
