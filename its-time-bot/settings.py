@@ -13,9 +13,10 @@ if SheetsAccJson != None and SheetsAccJson != '':
 
 SheetsName = environ.get('SHEETS_NAME')
 
-SheetHbs     = environ.get('SHEET_HBS')
-SheetHbsName = environ.get('SHEET_HBS_NAME')
-SheetHbsDate = environ.get('SHEET_HBS_DATE')
+SheetHbs               = environ.get('SHEET_HBS')
+SheetHbsName           = environ.get('SHEET_HBS_NAME')
+SheetHbsDate           = environ.get('SHEET_HBS_DATE')
+SheetHbsAdditionalText = environ.get('SHEET_HBS_ADD_TEXT')
 
 SheetEmoji = environ.get('SHEET_EMOJI')
 SheetHokku = environ.get('SHEET_HOKKU')

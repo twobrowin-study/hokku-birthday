@@ -8,7 +8,7 @@ def OpenSheets():
     return sh
 
 def GetTodayHbs(sh):
-    from settings import SheetHbs, SheetHbsName, SheetHbsDate
+    from settings import SheetHbs, SheetHbsDate
     from datetime import datetime
 
     today = datetime.today().strftime('%d.%m')
@@ -18,7 +18,7 @@ def GetTodayHbs(sh):
     df[SheetHbsDate] = df[SheetHbsDate].apply(lambda date: '.'.join(date.split('.')[:2]))
     df_todays = df.loc[df[SheetHbsDate] == today]
 
-    return df_todays[SheetHbsName].values
+    return df_todays
 
 def GetThreeEmojies(sh):
     from settings import SheetEmoji
