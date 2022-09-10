@@ -48,7 +48,7 @@
     - name: Run docker container
       docker_container:
         name: hokku-birthday
-        image: hokku-birthday:1.2.4
+        image: hokku-birthday:1.3.2
         state: started
         detach: yes
         restart: yes

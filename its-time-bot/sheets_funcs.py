@@ -15,7 +15,7 @@ def GetTodayHbs(sh):
 
     wks = sh.worksheet_by_title(SheetHbs)
     df = wks.get_as_df()
-    df[SheetHbsDate] = df[SheetHbsDate].apply(lambda date: '.'.join(date.split('.')[:2]))
+    df[SheetHbsDate] = df[SheetHbsDate].apply(lambda date: '.'.join(str(date).split('.')[:2]))
     df_todays = df.loc[df[SheetHbsDate] == today]
 
     return df_todays
