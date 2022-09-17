@@ -1,44 +1,3 @@
-# Load images
-- hosts: all
-  tags:
-    - docker_img
-  tasks:
-    - name: Create images directory
-      tags:
-        - docker_img_copy
-      file:
-        path:  ~/img/
-        state: directory
-
-    - name: Copy docker images files
-      tags:
-        - docker_img_copy
-      copy:
-        src:  ./img/
-        dest: ~/img/
-        directory_mode: yes
-    
-    - name: Load docker images
-      tags:
-        - docker_img_load
-      docker_image:
-        name: "{{ item | split('/') | last | split('_') | first | split('=') | join('/') }}"
-        tag: "{{ item | split('/') | last | split('_') | last }}"
-        load_path: "~/img/{{ item | split('/') | last  }}"
-        source: load
-      with_fileglob:
-        - ./img/*
-    
-    - name: Remove docker images files
-      tags:
-        - docker_img_rm
-      file:
-        path: "~/img/{{ item | split('/') | last  }}"
-        state: absent
-      with_fileglob:
-        - ./img/*
-
-# Run images
 - hosts: all
   tags:
     - run_docker
@@ -48,7 +7,7 @@
     - name: Run docker container
       docker_container:
         name: hokku-birthday
-        image: hokku-birthday:1.3.6
+        image: twobrowin/hokku-birthday:1.3.8
         state: started
         detach: yes
         restart: yes
