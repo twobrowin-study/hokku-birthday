@@ -7,7 +7,7 @@
     - name: Run docker container
       docker_container:
         name: hokku-birthday
-        image: twobrowin/hokku-birthday:1.3.8
+        image: twobrowin/hokku-birthday:1.4.1-bot-api
         state: started
         detach: yes
         restart: yes
