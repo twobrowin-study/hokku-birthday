@@ -1,6 +1,6 @@
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, ContextTypes
-from telegram.ext.filters import TEXT
+from telegram.ext.filters import ALL
 
 from datetime import datetime
 from settings import BotToken
@@ -11,4 +11,4 @@ async def no_reaction_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
     await update.message.reply_markdown("На таких петушар как ты я не реагирую!")
 
 Bot = ApplicationBuilder().token(BotToken).build()
-Bot.add_handler(MessageHandler(TEXT, no_reaction_handler))
+Bot.add_handler(MessageHandler(ALL, no_reaction_handler))
