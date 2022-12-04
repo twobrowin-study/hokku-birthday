@@ -7,7 +7,7 @@
     - name: Run docker container
       docker_container:
         name: hokku-birthday
-        image: twobrowin/hokku-birthday:1.4.2
+        image: twobrowin/hokku-birthday:1.4.3
         state: started
         detach: yes
         restart: yes
