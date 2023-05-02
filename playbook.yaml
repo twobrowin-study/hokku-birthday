@@ -4,14 +4,14 @@
   vars_files:
     - secrets.yaml
   tasks:
-    - name: Run docker container
-      docker_container:
+    - name: Init a new swarm with default parameters
+      community.docker.docker_swarm:
+        state: present
+
+    - name: Run bot docker service
+      docker_swarm_service:
         name: hokku-birthday
         image: twobrowin/hokku-birthday:1.4.3
-        state: started
-        detach: yes
-        restart: yes
-        recreate: yes
         env:
           BOT_TOKEN: "{{ bot_token }}"
           SHEETS_ACC_JSON: "{{ sheet_acc_json | string }}"
@@ -29,4 +29,3 @@
           SHEET_TO_WHOM_SEND: 'Каналы для отправки'
           SHEET_TO_WHOM_SEND_ID: 'Telegram ID'
           CRON_TIME: '15 09 * * *'
-    
