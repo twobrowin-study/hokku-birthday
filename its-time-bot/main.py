@@ -1,14 +1,14 @@
 from random import randint
 from datetime import datetime
 
-import sys
-
 from bot import Bot
 from sheets_funcs import OpenSheets, GetTodayHbs, GetThreeEmojies
 from sheets_funcs import GetHokku, GetMainText, GetToWhomSend
 from picture import RequestPhoto
 
 from settings import SheetHbsName, SheetHbsAdditionalText
+
+from time import sleep
 
 def send_hb():
    sh = OpenSheets()
@@ -61,5 +61,12 @@ def send_hb():
             Bot.send_message(id, caption)
 
 print("\n{}: Start sending hokku hb".format(datetime.now()))
-send_hb()
+for i in range(0,100):
+   try:
+      send_hb()
+   except Exception:
+      sleep(1)
+      print(f"\n{datetime.now()}: Retry sending hokku hb try {i}")
+      continue
+   break
 print("\n{}: Done sending hokku hb".format(datetime.now()))
