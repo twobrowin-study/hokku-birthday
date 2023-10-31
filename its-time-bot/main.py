@@ -9,6 +9,7 @@ from picture import RequestPhoto
 from settings import SheetHbsName, SheetHbsAdditionalText
 
 from time import sleep
+import traceback
 
 def send_hb():
    sh = OpenSheets()
@@ -60,13 +61,15 @@ def send_hb():
          else:
             Bot.send_message(id, caption)
 
-print("\n{}: Start sending hokku hb".format(datetime.now()))
-for i in range(0,100):
-   try:
-      send_hb()
-   except Exception:
-      sleep(1)
-      print(f"\n{datetime.now()}: Retry sending hokku hb try {i}")
-      continue
-   break
-print("\n{}: Done sending hokku hb".format(datetime.now()))
+if __name__ == "__main__":
+   print("\n{}: Start sending hokku hb".format(datetime.now()))
+   for i in range(0,100):
+      try:
+         send_hb()
+      except Exception:
+         print(traceback.format_exc())
+         sleep(1)
+         print(f"\n{datetime.now()}: Retry sending hokku hb try {i}")
+         continue
+      break
+   print("\n{}: Done sending hokku hb".format(datetime.now()))
