@@ -105,7 +105,13 @@ def _get_hokku(app: HbApplication, row: pd.Series) -> list[list[str]]:
     responce = requests.post(
         API_HOKKU,
         data    = data,
-        headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+        headers = {
+            'Content-Type':    'application/x-www-form-urlencoded; charset=UTF-8',
+            'User-Agent':      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0',
+            'Accept-Encoding': '*',
+            'Connection':      'keep-alive', 
+            'Range':           'bytes=0-2000000'
+        },
     )
     if not responce.ok:
         responce.raise_for_status()

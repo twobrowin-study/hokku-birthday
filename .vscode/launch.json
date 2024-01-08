@@ -9,7 +9,8 @@
             "type": "python",
             "request": "launch",
             "program": "${workspaceFolder}/python/main.py",
-            "args": ["-D", "08.01"],
+            "args": ["-D"],
+            // "args": ["-D", "08.01"],
             "console": "integratedTerminal",
             "justMyCode": true
         }

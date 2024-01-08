@@ -13,7 +13,7 @@ from telegram.ext.filters import ChatType
 
 from application import HbApplication
 from handlers import PrivateChatMessageHandler, ErrorHandler
-from jobs import HokkuBirthdayJob
+from hokku_birhday import HokkuBirthdayJob
 
 dotenv.load_dotenv(dotenv.load_dotenv())
 
