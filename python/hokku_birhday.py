@@ -12,6 +12,7 @@ from yamager import Yamager
 from telegram import Bot
 from telegram.ext import CallbackContext
 from telegram.constants import ParseMode
+from telegram.error import BadRequest
 
 from application import (
     HbApplication,
@@ -23,6 +24,8 @@ from application import (
 )
 
 API_HOKKU = 'https://boredhumans.com/api_haiku.php'
+
+SEND_MESSAGE_RETRYS = 10
 
 async def HokkuBirthdayJob(context: CallbackContext) -> None:
     app: HbApplication = context.application
@@ -89,13 +92,25 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     found_images  = Yamager().search_google_images(
         app.image_request.format(hokku_line = random.choice(flatten_hokku))
     )
-    photo_link = random.choice(found_images)
-    logger.info('Got picture link')
+    logger.info('Got picture links')
 
-    bot: Bot =  app.bot
-    for _,pubish_s in pubish_df.iterrows():
-        await _send_text_and_image(bot, pubish_s['chat_id'], text, photo_link)
-    logger.info('Send messages')
+    for iteration in range(SEND_MESSAGE_RETRYS):
+        try:
+            photo_link = random.choice(found_images)
+            logger.info('Selected image')
+
+            bot: Bot =  app.bot
+            for _,pubish_s in pubish_df.iterrows():
+                await _send_text_and_image(bot, pubish_s['chat_id'], text, photo_link)
+            logger.info('Send message')
+
+            break
+        except BadRequest as ex:
+            logger.warning(f'Iteration {iteration}: Got {ex.__class__} while sending message - retrying with different image')
+    
+    if iteration == SEND_MESSAGE_RETRYS-1:
+        logger.warning(f'Could not send message {SEND_MESSAGE_RETRYS} times - exception')
+        raise Exception(f'Could not send message {SEND_MESSAGE_RETRYS} times')
 
     logger.info('Birthday job done')
 
