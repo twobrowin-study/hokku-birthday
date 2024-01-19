@@ -14,7 +14,7 @@
     - name: Run bot docker service
       docker_swarm_service:
         name: hokku-birthday
-        image: twobrowin/hokku-birthday:2.0.2
+        image: twobrowin/hokku-birthday:2.0.3
         env:
           TZ: "Europe/Moscow"
           BOT_TOKEN:     "{{ secrets.bot_token }}"

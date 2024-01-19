@@ -92,11 +92,12 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     found_images  = Yamager().search_google_images(
         app.image_request.format(hokku_line = random.choice(flatten_hokku))
     )
+    best_images = found_images[:min(10,len(found_images))]
     logger.info('Got picture links')
 
     for iteration in range(SEND_MESSAGE_RETRYS):
         try:
-            photo_link = random.choice(found_images)
+            photo_link = random.choice(best_images)
             logger.info('Selected image')
 
             bot: Bot =  app.bot
