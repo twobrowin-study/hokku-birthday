@@ -1,5 +1,13 @@
 # Бот - поздравлятор с ДР
 
+## Переменные окружения
+
+* `BOT_TOKEN` - Токен бота
+
+* `SHEETS_LINK` - Ссылка на таблицу
+
+* `SHEETS_ACC` - Json строка с данными подключения к API
+
 ## Локальный запуск
 
 Для локального запуска следует обогатить файл `.env.example` настоящими значениями и сохранить как файл `.env`.
@@ -15,7 +23,7 @@
 ## Сборка
 
 ```bash
-docker build --push -t twobrowin/hokku-birthday:latest .
+docker build . --push -t twobrowin/hokku-birthday:latest
 ```
 
 ## Развёртывание

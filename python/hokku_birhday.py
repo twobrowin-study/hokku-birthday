@@ -122,11 +122,12 @@ def _get_hokku(app: HbApplication, row: pd.Series) -> list[list[str]]:
         API_HOKKU,
         data    = data,
         headers = {
-            'Content-Type':    'application/x-www-form-urlencoded; charset=UTF-8',
-            'User-Agent':      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0',
-            'Accept-Encoding': '*',
-            'Connection':      'keep-alive', 
-            'Range':           'bytes=0-2000000'
+            'Content-Type':     'application/x-www-form-urlencoded; charset=UTF-8',
+            'User-Agent':       'Mozilla/5.0 (X11; Linux x86_64; rv:132.0) Gecko/20100101 Firefox/132.0',
+            'Accept-Encoding':  '*',
+            'Connection':       'keep-alive', 
+            'Range':            'bytes=0-2000000',
+            'X-Requested-With': 'XMLHttpRequest',
         },
     )
     if not responce.ok:
