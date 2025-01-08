@@ -29,9 +29,15 @@ docker build . --push -t twobrowin/hokku-birthday:latest
 ## Развёртывание
 
 ```bash
-# Установка зависимостей
-ansible-galaxy install -r requirements.yml
-
-# Развёртывание
-ansible-playbook -v -i inventory.yaml playbook.yaml
+helm upgrade --install --debug -n baumanec hokku-birthday ./charts
 ```
+
+## Зависимости k8s
+
+Следует создать неймспейс `baumanec` и секрет `hokku-birthday` в нём, поля секрета:
+
+* `bot_token` - токен подключения к Telegram боту
+
+* `sheets_acc` - JWT токен подключения к Google Spreadsheet API
+
+* `sheets_link` - Ссылка на подключение к требуемой таблице - боту требуется доступ на запись, может быть передан как в ссылке, так и назначен инстрементами Google Spreadsheet
