@@ -74,7 +74,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     bdays_df["congratulation_name"] = bdays_df.apply(
         lambda row: row["congratulation_name_template"].format(
             declension_name=row["declension_name"],
-            username=row["username"].replace("_", "\\_"),
+            username=row["username"],
         ),
         axis="columns",
     )
