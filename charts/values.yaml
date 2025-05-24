@@ -1,5 +1,5 @@
 container:
-  image: twobrowin/hokku-birthday:2.2.3
+  image: twobrowin/hokku-birthday:2.2.4-rc.0
   imagePullPolicy: IfNotPresent
 
   env:

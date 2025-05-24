@@ -123,7 +123,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
             break
         except BadRequest as ex:
             logger.warning(
-                f"Iteration {iteration}: Got {ex.__class__} while sending message - retrying with different image"
+                f"Iteration {iteration}: Got {ex.__class__} while sending message - retrying with different image\n{ex.message}"
             )
 
     if iteration == SEND_MESSAGE_RETRYS - 1:
