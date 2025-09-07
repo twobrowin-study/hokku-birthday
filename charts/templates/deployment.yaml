@@ -22,3 +22,12 @@ spec:
 
         env:
         {{ .Values.container.env | toYaml | nindent 8 | trim }}
+        
+        resources:
+          requests:
+            cpu: {{ .Values.container.resources.requests.cpu }}
+            memory: {{ .Values.container.resources.requests.memory }}
+          limits:
+            cpu: {{ .Values.container.resources.limits.cpu }}
+            memory: {{ .Values.container.resources.limits.memory }}
+

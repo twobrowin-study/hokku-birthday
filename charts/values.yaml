@@ -20,3 +20,11 @@ container:
       secretKeyRef:
         name: hokku-birthday
         key: sheets_link
+  
+  resources:
+    requests:
+      cpu: 150m
+      memory: 150M
+    limits:
+      cpu: 200m
+      memory: 200M
