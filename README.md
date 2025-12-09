@@ -8,6 +8,10 @@
 
 * `SHEETS_ACC` - Json строка с данными подключения к API
 
+* `YA_CLOUD_FOLDER_ID` - Идентификатор облака Yandex
+
+* `YA_SEARCH_API_ACC` - Json строка с данными для подключения к Yandex Search API
+
 ## Локальный запуск
 
 Для локального запуска следует обогатить файл `.env.example` настоящими значениями и сохранить как файл `.env`.
@@ -41,3 +45,7 @@ helm upgrade --install --debug -n baumanec hokku-birthday ./charts
 * `sheets_acc` - JWT токен подключения к Google Spreadsheet API
 
 * `sheets_link` - Ссылка на подключение к требуемой таблице - боту требуется доступ на запись, может быть передан как в ссылке, так и назначен инстрементами Google Spreadsheet
+
+* `ya_cloud_folder_id` - Идентификатор облака Yandex
+
+* `ya_search_api_acc` - Json строка с данными для подключения к Yandex Search API

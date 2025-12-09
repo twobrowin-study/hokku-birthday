@@ -1,5 +1,5 @@
 container:
-  image: twobrowin/hokku-birthday:2.2.4-rc.0
+  image: twobrowin/hokku-birthday:2.3.0-rc.0
   imagePullPolicy: IfNotPresent
 
   env:
@@ -20,6 +20,16 @@ container:
       secretKeyRef:
         name: hokku-birthday
         key: sheets_link
+  - name: YA_CLOUD_FOLDER_ID
+    valueFrom:
+      secretKeyRef:
+        name: hokku-birthday
+        key: ya_cloud_folder_id
+  - name: YA_SEARCH_API_ACC
+    valueFrom:
+      secretKeyRef:
+        name: hokku-birthday
+        key: ya_search_api_acc
   
   resources:
     requests:

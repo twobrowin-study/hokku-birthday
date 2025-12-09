@@ -10,22 +10,21 @@ from telegram import Bot
 from telegram.constants import ParseMode
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
-from yamager import Yamager
 
 API_HOKKU = "https://www.haiku-generator.com/api/haiku"
 
-SEND_MESSAGE_RETRYS = 10
+SEND_MESSAGE_RETRIES = 10
 
 
 async def HokkuBirthdayJob(context: CallbackContext) -> None:
-    app: HbApplication = context.application
-    logger.info("Start birhday job")
+    app: HbApplication = context.application  # type: ignore
+    logger.info("Start birthday job")
 
-    _, pubish_df = await app.load_dataframe(PUBLISH)
+    _, publish_df = await app.load_dataframe(PUBLISH)
     logger.info("Loaded publish data frame")
 
-    pubish_df = pubish_df.loc[pubish_df["is_active"] == YES]
-    if pubish_df.empty:
+    publish_df = publish_df.loc[publish_df["is_active"] == YES]
+    if publish_df.empty:
         logger.info("No chat to publish results - quit job")
         return
 
@@ -33,7 +32,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     bdays_df["birth_date"] = bdays_df["birth_date"].apply(
         lambda date: ".".join(str(date).split(".")[:2])
     )
-    logger.info("Loaded birhtdays data frame")
+    logger.info("Loaded birthdays data frame")
 
     today = (
         datetime.today().strftime("%d.%m")
@@ -63,14 +62,14 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
 
     _, emoji_df = await app.load_dataframe(EMOJI)
     three_random_emoji = "".join(random.sample(emoji_df.iloc[0]["data"], 3))
-    logger.info("Loaded emojies data")
+    logger.info("Loaded emojis data")
 
     bdays_df["congratulation_name_template"] = bdays_df.apply(
         lambda row: app.congratulation_name_username
         if row["username"] != ""
-        else app.congratulation_name_no_username,
+        else app.congratulation_name_no_username,  # type: ignore
         axis="columns",
-    )
+    )  # type: ignore
     bdays_df["congratulation_name"] = bdays_df.apply(
         lambda row: row["congratulation_name_template"].format(
             declension_name=row["declension_name"],
@@ -79,7 +78,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
         axis="columns",
     )
     bdays_df["congratulation_list_item"] = bdays_df.apply(
-        lambda row: app.congratulation_list_item.format(
+        lambda row: str(app.congratulation_list_item).format(
             congratulation_name=row["congratulation_name"]
         ),
         axis="columns",
@@ -87,14 +86,15 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     logger.info("Rendered congratulation names")
 
     bdays_df["hokku"] = bdays_df.apply(lambda row: _get_hokku(app, row), axis="columns")
-    logger.info("Got hokkus")
+    logger.info("Got hokku")
 
     text = _render_text(
-        single_birthday,
-        birthday_text_template,
-        num_of_birthday,
-        three_random_emoji,
-        bdays_df,
+        date=today,
+        single_birthday=single_birthday,
+        birthday_text_template=birthday_text_template,
+        num_of_birthday=num_of_birthday,
+        three_random_emoji=three_random_emoji,
+        bdays_df=bdays_df,
     )
     logger.info("Rendered text")
 
@@ -104,20 +104,22 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
         for arr in values
         for el in arr
     ]
-    found_images = Yamager().search_google_images(
-        app.image_request.format(hokku_line=random.choice(flatten_hokku))
+    found_images = app.ya_search_for_image(
+        str(app.image_request).format(hokku_line=random.choice(flatten_hokku))
     )
     best_images = found_images[: min(10, len(found_images))]
-    logger.info("Got picture links")
+    logger.info(f"Got {len(best_images)} picture links")
 
-    for iteration in range(SEND_MESSAGE_RETRYS):
+    for iteration in range(SEND_MESSAGE_RETRIES):
         try:
             photo_link = random.choice(best_images)
             logger.info("Selected image")
 
             bot: Bot = app.bot
-            for _, pubish_s in pubish_df.iterrows():
-                await _send_text_and_image(bot, pubish_s["chat_id"], text, photo_link)
+            for _, publish_s in publish_df.iterrows():
+                await _send_text_and_image(
+                    bot, publish_s["chat_id"], text, photo_link=photo_link
+                )
             logger.info("Send message")
 
             break
@@ -125,29 +127,30 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
             logger.warning(
                 f"Iteration {iteration}: Got {ex.__class__} while sending message - retrying with different image\n{ex.message}"
             )
-
-    if iteration == SEND_MESSAGE_RETRYS - 1:
-        logger.warning(
-            f"Could not send message {SEND_MESSAGE_RETRYS} times - exception"
-        )
-        raise Exception(f"Could not send message {SEND_MESSAGE_RETRYS} times")
+        finally:
+            if iteration == SEND_MESSAGE_RETRIES - 1:
+                logger.warning(
+                    f"Could not send message {SEND_MESSAGE_RETRIES} times - exception"
+                )
+                raise Exception(f"Could not send message {SEND_MESSAGE_RETRIES} times")
 
     logger.info("Birthday job done")
 
 
 def _get_hokku(app: HbApplication, row: pd.Series) -> list[list[str]]:
-    prompt = app.hokku_request.format(name=row["name"], item=row["item"])
-    responce = requests.post(
+    prompt = str(app.hokku_request).format(name=row["name"], item=row["item"])
+    response = requests.post(
         API_HOKKU,
         json={"content": prompt},
     )
-    if not responce.ok:
-        responce.raise_for_status()
-    content_dict = json.loads(responce.text)
+    if not response.ok:
+        response.raise_for_status()
+    content_dict = json.loads(response.text)
     return content_dict["choices"][0]["message"]["content"]
 
 
 def _render_text(
+    date: str,
     single_birthday: bool,
     birthday_text_template: str,
     num_of_birthday: int,
@@ -157,6 +160,7 @@ def _render_text(
     if single_birthday:
         bday_s = bdays_df.iloc[0]
         return birthday_text_template.format(
+            date=date,
             congratulation_name=bday_s["congratulation_name"],
             three_random_emoji=three_random_emoji,
             hokku=bday_s["hokku"],
@@ -164,13 +168,14 @@ def _render_text(
         )
 
     return birthday_text_template.format(
+        date=date,
         congratulation_count=num_of_birthday,
         three_random_emoji=three_random_emoji,
         congratulation_list="\n".join(
             bdays_df["congratulation_list_item"].values.tolist()
         ),
-        hokkus="\n\n".join(bdays_df["hokku"].values.tolist()),
-        appendixes="\n\n".join(bdays_df["appendix"].values.tolist()),
+        hokku="\n\n".join(bdays_df["hokku"].values.tolist()),
+        appendix="\n\n".join(bdays_df["appendix"].values.tolist()),
     )
 
 
