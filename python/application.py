@@ -78,7 +78,7 @@ class HbApplication(Application):
         self.schedule_jobs = schedule_jobs
         self.birthday_callback = birthday_callback
 
-        self.ya_search_sdk = YCloudML(
+        self.ya_cloud_ml = YCloudML(
             folder_id=ya_cloud_folder_id,
             auth=self.ya_create_iam_token(ya_search_api_acc),
         )
@@ -116,10 +116,23 @@ class HbApplication(Application):
 
         return iam_token_response.iam_token
 
+    def ya_generate_hokku(
+        self, hokku_request: str = "Сгенерируй хокку про Егора Дубровина"
+    ) -> str:
+        model: Any = self.ya_cloud_ml.models.completions("yandexgpt")
+        operation: Any = model.run_deferred(
+            [
+                {"role": "system", "text": hokku_request},
+            ]
+        )
+
+        result: Any = operation.wait()
+        return result.alternatives[0].text
+
     def ya_search_for_image(
         self, search_request: str = "Японская живопись", docs_on_page: int = 10
     ) -> list[str]:
-        search: Any = self.ya_search_sdk.search_api.image(
+        search: Any = self.ya_cloud_ml.search_api.image(
             search_type=SearchType.RU,
             format=ImageFormat.JPEG,
             size=ImageSize.MEDIUM,

@@ -1,17 +1,13 @@
-import json
 import random
 from datetime import datetime
 
 import pandas as pd
-import requests
 from application import BIRTHDAYS, EMOJI, PUBLISH, TEXT, YES, HbApplication
 from loguru import logger
 from telegram import Bot
 from telegram.constants import ParseMode
 from telegram.error import BadRequest
 from telegram.ext import CallbackContext
-
-API_HOKKU = "https://www.haiku-generator.com/api/haiku"
 
 SEND_MESSAGE_RETRIES = 10
 
@@ -85,7 +81,12 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     )
     logger.info("Rendered congratulation names")
 
-    bdays_df["hokku"] = bdays_df.apply(lambda row: _get_hokku(app, row), axis="columns")
+    bdays_df["hokku"] = bdays_df.apply(
+        lambda row: app.ya_generate_hokku(
+            str(app.hokku_request).format(name=row["declension_name"], item=row["item"])
+        ),
+        axis="columns",
+    )
     logger.info("Got hokku")
 
     text = _render_text(
@@ -100,8 +101,8 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
 
     flatten_hokku = [
         el
-        for values in bdays_df["hokku"].values.tolist()
-        for arr in values
+        for value in bdays_df["hokku"].values.tolist()
+        for arr in value.split("\n")
         for el in arr
     ]
     found_images = app.ya_search_for_image(
@@ -135,18 +136,6 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
                 raise Exception(f"Could not send message {SEND_MESSAGE_RETRIES} times")
 
     logger.info("Birthday job done")
-
-
-def _get_hokku(app: HbApplication, row: pd.Series) -> list[list[str]]:
-    prompt = str(app.hokku_request).format(name=row["name"], item=row["item"])
-    response = requests.post(
-        API_HOKKU,
-        json={"content": prompt},
-    )
-    if not response.ok:
-        response.raise_for_status()
-    content_dict = json.loads(response.text)
-    return content_dict["choices"][0]["message"]["content"]
 
 
 def _render_text(
