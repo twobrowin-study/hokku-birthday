@@ -81,6 +81,9 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     )
     logger.info("Rendered congratulation names")
 
+    app.ya_auth()
+    logger.info("Authed in Yandex")
+
     bdays_df["hokku"] = bdays_df.apply(
         lambda row: app.ya_generate_hokku(
             str(app.hokku_request).format(name=row["declension_name"], item=row["item"])

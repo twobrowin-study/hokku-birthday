@@ -78,13 +78,18 @@ class HbApplication(Application):
         self.schedule_jobs = schedule_jobs
         self.birthday_callback = birthday_callback
 
+        self.ya_cloud_folder_id = ya_cloud_folder_id
+        self.ya_search_api_acc = ya_search_api_acc
+        self.ya_cloud_ml: YCloudML
+    
+    def ya_auth(self) -> None:
         self.ya_cloud_ml = YCloudML(
-            folder_id=ya_cloud_folder_id,
-            auth=self.ya_create_iam_token(ya_search_api_acc),
+            folder_id=self.ya_cloud_folder_id,
+            auth=self.ya_create_iam_token(),
         )
 
-    def ya_create_iam_token(self, ya_search_api_acc: str) -> str:
-        ya_search_api_acc_dict = json.loads(ya_search_api_acc)
+    def ya_create_iam_token(self) -> str:
+        ya_search_api_acc_dict = json.loads(self.ya_search_api_acc)
 
         private_key = ya_search_api_acc_dict["private_key"]
         key_id = ya_search_api_acc_dict["id"]
