@@ -20,8 +20,8 @@ from telegram.ext._updater import Updater
 from telegram.ext._utils.types import CCT, JobCallback
 from yandex.cloud.iam.v1.iam_token_service_pb2 import CreateIamTokenRequest
 from yandex.cloud.iam.v1.iam_token_service_pb2_grpc import IamTokenServiceStub
-from yandex_cloud_ml_sdk import YCloudML
-from yandex_cloud_ml_sdk.search_api import (
+from yandex_ai_studio_sdk import AIStudio
+from yandex_ai_studio_sdk.search_api import (
     ImageFormat,
     ImageOrientation,
     ImageSize,
@@ -80,10 +80,10 @@ class HbApplication(Application):
 
         self.ya_cloud_folder_id = ya_cloud_folder_id
         self.ya_search_api_acc = ya_search_api_acc
-        self.ya_cloud_ml: YCloudML
-    
+        self.ya_ai_studio: AIStudio
+
     def ya_auth(self) -> None:
-        self.ya_cloud_ml = YCloudML(
+        self.ya_ai_studio = AIStudio(
             folder_id=self.ya_cloud_folder_id,
             auth=self.ya_create_iam_token(),
         )
@@ -103,9 +103,7 @@ class HbApplication(Application):
             "exp": now + 3600,
         }
 
-        encoded_jwt_token = jwt.encode(
-            payload, private_key, algorithm="PS256", headers={"kid": key_id}
-        )
+        encoded_jwt_token = jwt.encode(payload, private_key, algorithm="PS256", headers={"kid": key_id})
 
         sa_key = {
             "id": key_id,
@@ -115,40 +113,34 @@ class HbApplication(Application):
 
         sdk = yandexcloud.SDK(service_account_key=sa_key)  # pyright: ignore[reportPrivateImportUsage]
         iam_service = sdk.client(IamTokenServiceStub)
-        iam_token_response = iam_service.Create(
-            CreateIamTokenRequest(jwt=encoded_jwt_token)
-        )
+        iam_token_response = iam_service.Create(CreateIamTokenRequest(jwt=encoded_jwt_token))
 
         return iam_token_response.iam_token
 
-    def ya_generate_hokku(
-        self, hokku_request: str = "Сгенерируй хокку про Егора Дубровина"
-    ) -> str:
-        model: Any = self.ya_cloud_ml.models.completions("yandexgpt")
-        operation: Any = model.run_deferred(
+    def ya_generate_hokku(self, hokku_ai_context: str, hokku_user_request: str) -> str:
+        model = self.ya_ai_studio.models.completions("yandexgpt").configure(temperature=0.5)
+        operation = model.run_deferred(
             [
-                {"role": "system", "text": hokku_request},
+                {"role": "system", "text": hokku_ai_context},
+                {"role": "user", "text": hokku_user_request},
             ]
         )
 
-        result: Any = operation.wait()
+        result = operation.wait()
+        logger.debug(f"Ya AI Studio response is {result=}")
         return result.alternatives[0].text
 
-    def ya_search_for_image(
-        self, search_request: str = "Японская живопись", docs_on_page: int = 10
-    ) -> list[str]:
-        search: Any = self.ya_cloud_ml.search_api.image(
+    def ya_search_for_image(self, search_request: str = "Японская живопись", docs_on_page: int = 10) -> list[str]:
+        search = self.ya_ai_studio.search_api.image(
             search_type=SearchType.RU,
             format=ImageFormat.JPEG,
             size=ImageSize.MEDIUM,
             orientation=ImageOrientation.HORIZONTAL,
             docs_on_page=docs_on_page,
         )
-        search_result: Any = search.run(search_request, format="parsed")
+        search_result = search.run(search_request, format="parsed")
         return [
-            document.url
-            for group in search_result.groups
-            for document in group.documents
+            document.url for group in search_result.groups for document in group.documents if document.url is not None
         ]
 
     async def open_sheets(self) -> None:
@@ -168,9 +160,7 @@ class HbApplication(Application):
         self.agc = await self.agcm.authorize()
         self.sh = await self.agc.open_by_url(self.sheets_link)
 
-    async def load_dataframe(
-        self, wks_name: str
-    ) -> tuple[gspread_asyncio.AsyncioGspreadWorksheet, pd.DataFrame]:
+    async def load_dataframe(self, wks_name: str) -> tuple[gspread_asyncio.AsyncioGspreadWorksheet, pd.DataFrame]:
         wks = await self.sh.worksheet(wks_name)
         records = await wks.get_all_records()
         return wks, pd.DataFrame(records)
@@ -192,35 +182,22 @@ class HbApplication(Application):
         self.reload_every_s = self.get_from_settings("reload_every_s")
         self.admin_chat_id = self.get_from_settings("admin_chat_id")
         self.schedule_birthday = self.get_from_settings("schedule_birthday")
-        self.congratulation_name_username = self.get_from_settings(
-            "congratulation_name_username"
-        )
-        self.congratulation_name_no_username = self.get_from_settings(
-            "congratulation_name_no_username"
-        )
-        self.congratulation_list_item = self.get_from_settings(
-            "congratulation_list_item"
-        )
+        self.congratulation_name_username = self.get_from_settings("congratulation_name_username")
+        self.congratulation_name_no_username = self.get_from_settings("congratulation_name_no_username")
+        self.congratulation_list_item = self.get_from_settings("congratulation_list_item")
         self.image_request = self.get_from_settings("image_request")
-        self.hokku_request = self.get_from_settings("hokku_request")
+        self.hokku_ai_context = self.get_from_settings("hokku_ai_context")
+        self.hokku_user_request = self.get_from_settings("hokku_user_request")
         self.request_response = self.get_from_settings("request_response")
         logger.info("Loaded settings df")
 
         if self.schedule_jobs and self.job_queue:
-            self.job_queue.run_repeating(
-                self.reload_job, interval=int(str(self.reload_every_s))
-            )
+            self.job_queue.run_repeating(self.reload_job, interval=int(str(self.reload_every_s)))
             logger.info(f"Scheduled reload job every {self.reload_every_s}s")
 
-            schedule_birthday_time = datetime.strptime(
-                str(self.schedule_birthday), "%H:%M"
-            ).time()
-            self.job_queue.run_daily(
-                self.birthday_callback, time=schedule_birthday_time
-            )
-            logger.info(
-                f"Scheduled birthday job daily everyday at {schedule_birthday_time}"
-            )
+            schedule_birthday_time = datetime.strptime(str(self.schedule_birthday), "%H:%M").time()
+            self.job_queue.run_daily(self.birthday_callback, time=schedule_birthday_time)
+            logger.info(f"Scheduled birthday job daily everyday at {schedule_birthday_time}")
 
     async def reload_job(self, context: CallbackContext) -> None:
         logger.info("Start reload job")
@@ -242,17 +219,9 @@ class HbApplication(Application):
         await switch_wks.update_cell(reload_cell_row, reload_cell_col, DONE)
         logger.info("Set reload status to done - we will reload soon")
 
-        logger.info(
-            (
-                f"Restarting now "
-                f"sys.argv was {sys.argv} "
-                f"sys.executable was {sys.executable}"
-            )
-        )
+        logger.info((f"Restarting now sys.argv was {sys.argv} sys.executable was {sys.executable}"))
         os.execv(sys.executable, [os.path.basename(sys.executable)] + sys.argv)
 
     async def send_message_to_admin(self, text: str, parse_mode: str) -> None:
         bot: Bot = self.bot
-        await bot.send_message(
-            str(self.admin_chat_id), text=text, parse_mode=parse_mode
-        )
+        await bot.send_message(str(self.admin_chat_id), text=text, parse_mode=parse_mode)

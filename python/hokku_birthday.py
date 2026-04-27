@@ -25,15 +25,11 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
         return
 
     _, bdays_df = await app.load_dataframe(BIRTHDAYS)
-    bdays_df["birth_date"] = bdays_df["birth_date"].apply(
-        lambda date: ".".join(str(date).split(".")[:2])
-    )
+    bdays_df["birth_date"] = bdays_df["birth_date"].apply(lambda date: ".".join(str(date).split(".")[:2]))
     logger.info("Loaded birthdays data frame")
 
     today = (
-        datetime.today().strftime("%d.%m")
-        if "debug_date" not in context.bot_data
-        else context.bot_data["debug_date"]
+        datetime.today().strftime("%d.%m") if "debug_date" not in context.bot_data else context.bot_data["debug_date"]
     )
     bdays_df = bdays_df.loc[bdays_df["birth_date"] == today]
     if bdays_df.empty:
@@ -50,9 +46,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
         return text_df.loc[text_df["condition"] == condition].iloc[0]["text"]
 
     birthday_text_template: str = (
-        get_text_by_condition("single_birthday")
-        if single_birthday
-        else get_text_by_condition("few_birthdays")
+        get_text_by_condition("single_birthday") if single_birthday else get_text_by_condition("few_birthdays")
     )
     logger.info("Loaded text data frame")
 
@@ -61,11 +55,9 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     logger.info("Loaded emojis data")
 
     bdays_df["congratulation_name_template"] = bdays_df.apply(
-        lambda row: app.congratulation_name_username
-        if row["username"] != ""
-        else app.congratulation_name_no_username,  # type: ignore
+        lambda row: app.congratulation_name_username if row["username"] != "" else app.congratulation_name_no_username,  # type: ignore
         axis="columns",
-    )  # type: ignore
+    )
     bdays_df["congratulation_name"] = bdays_df.apply(
         lambda row: row["congratulation_name_template"].format(
             declension_name=row["declension_name"],
@@ -74,9 +66,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
         axis="columns",
     )
     bdays_df["congratulation_list_item"] = bdays_df.apply(
-        lambda row: str(app.congratulation_list_item).format(
-            congratulation_name=row["congratulation_name"]
-        ),
+        lambda row: str(app.congratulation_list_item).format(congratulation_name=row["congratulation_name"]),
         axis="columns",
     )
     logger.info("Rendered congratulation names")
@@ -86,7 +76,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
 
     bdays_df["hokku"] = bdays_df.apply(
         lambda row: app.ya_generate_hokku(
-            str(app.hokku_request).format(name=row["declension_name"], item=row["item"])
+            str(app.hokku_ai_context), str(app.hokku_user_request).format(name=row["declension_name"], item=row["item"])
         ),
         axis="columns",
     )
@@ -102,15 +92,8 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     )
     logger.info("Rendered text")
 
-    flatten_hokku = [
-        el
-        for value in bdays_df["hokku"].values.tolist()
-        for arr in value.split("\n")
-        for el in arr
-    ]
-    found_images = app.ya_search_for_image(
-        str(app.image_request).format(hokku_line=random.choice(flatten_hokku))
-    )
+    flatten_hokku = [el for value in bdays_df["hokku"].to_numpy() for arr in value.split("\n") for el in arr]
+    found_images = app.ya_search_for_image(str(app.image_request).format(hokku_line=random.choice(flatten_hokku)))
     best_images = found_images[: min(10, len(found_images))]
     logger.info(f"Got {len(best_images)} picture links")
 
@@ -121,9 +104,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
 
             bot: Bot = app.bot
             for _, publish_s in publish_df.iterrows():
-                await _send_text_and_image(
-                    bot, publish_s["chat_id"], text, photo_link=photo_link
-                )
+                await _send_text_and_image(bot, publish_s["chat_id"], text, photo_link=photo_link)
             logger.info("Send message")
 
             break
@@ -133,9 +114,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
             )
         finally:
             if iteration == SEND_MESSAGE_RETRIES - 1:
-                logger.warning(
-                    f"Could not send message {SEND_MESSAGE_RETRIES} times - exception"
-                )
+                logger.warning(f"Could not send message {SEND_MESSAGE_RETRIES} times - exception")
                 raise Exception(f"Could not send message {SEND_MESSAGE_RETRIES} times")
 
     logger.info("Birthday job done")
@@ -163,26 +142,18 @@ def _render_text(
         date=date,
         congratulation_count=num_of_birthday,
         three_random_emoji=three_random_emoji,
-        congratulation_list="\n".join(
-            bdays_df["congratulation_list_item"].values.tolist()
-        ),
-        hokku="\n\n".join(bdays_df["hokku"].values.tolist()),
-        appendix="\n\n".join(bdays_df["appendix"].values.tolist()),
+        congratulation_list="\n".join(bdays_df["congratulation_list_item"].to_numpy()),
+        hokku="\n\n".join(bdays_df["hokku"].to_numpy()),
+        appendix="\n\n".join(bdays_df["appendix"].to_numpy()),
     )
 
 
-async def _send_text_and_image(
-    bot: Bot, chat_id: str, text: str, photo_link: str
-) -> None:
+async def _send_text_and_image(bot: Bot, chat_id: str, text: str, photo_link: str) -> None:
     if len(text) > 1024:
         await bot.send_photo(chat_id=chat_id, photo=photo_link)
-        await bot.send_message(
-            chat_id=chat_id, text=text, parse_mode=ParseMode.MARKDOWN
-        )
+        await bot.send_message(chat_id=chat_id, text=text, parse_mode=ParseMode.MARKDOWN)
         logger.info("Send picture and text separatly")
         return
 
-    await bot.send_photo(
-        chat_id=chat_id, photo=photo_link, caption=text, parse_mode=ParseMode.MARKDOWN
-    )
+    await bot.send_photo(chat_id=chat_id, photo=photo_link, caption=text, parse_mode=ParseMode.MARKDOWN)
     logger.info("Send picture and text in one message")

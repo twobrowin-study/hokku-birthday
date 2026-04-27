@@ -1,5 +1,5 @@
 container:
-  image: twobrowin/hokku-birthday:2.4.1-rc.0
+  image: twobrowin/hokku-birthday:2.5.0-rc.0
   imagePullPolicy: IfNotPresent
 
   env:
@@ -36,5 +36,5 @@ container:
       cpu: 150m
       memory: 150M
     limits:
-      cpu: 200m
-      memory: 200M
+      cpu: 300m
+      memory: 300M
