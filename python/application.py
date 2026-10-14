@@ -2,11 +2,14 @@ import json
 import os
 import sys
 from asyncio import Queue
+from collections.abc import Callable, Coroutine
 from datetime import datetime
-from typing import Any, Callable, Coroutine
+from typing import Any
+from zoneinfo import ZoneInfo
 
 import gspread_asyncio
 import jwt
+import openai
 import pandas as pd
 import yandexcloud
 from google.oauth2.service_account import Credentials
@@ -53,6 +56,7 @@ class HbApplication(Application):
         post_init: Callable[[Application], Coroutine[Any, Any, None]] | None,
         post_shutdown: Callable[[Application], Coroutine[Any, Any, None]] | None,
         post_stop: Callable[[Application], Coroutine[Any, Any, None]] | None,
+        zoneinfo: ZoneInfo,
         sheets_link: str,
         sheets_acc: str,
         ya_cloud_folder_id: str,
@@ -73,6 +77,7 @@ class HbApplication(Application):
             post_shutdown=post_shutdown,
             post_stop=post_stop,
         )
+        self.zoneinfo = zoneinfo
         self.sheets_link = sheets_link
         self.sheets_acc = sheets_acc
         self.schedule_jobs = schedule_jobs
@@ -80,12 +85,15 @@ class HbApplication(Application):
 
         self.ya_cloud_folder_id = ya_cloud_folder_id
         self.ya_search_api_acc = ya_search_api_acc
+        self.ya_model = "aliceai-llm"
+        self.ya_iam_token: str
         self.ya_ai_studio: AIStudio
 
     def ya_auth(self) -> None:
+        self.ya_iam_token = self.ya_create_iam_token()
         self.ya_ai_studio = AIStudio(
             folder_id=self.ya_cloud_folder_id,
-            auth=self.ya_create_iam_token(),
+            auth=self.ya_iam_token,
         )
 
     def ya_create_iam_token(self) -> str:
@@ -117,18 +125,22 @@ class HbApplication(Application):
 
         return iam_token_response.iam_token
 
-    def ya_generate_hokku(self, hokku_ai_context: str, hokku_user_request: str) -> str:
-        model = self.ya_ai_studio.models.completions("yandexgpt").configure(temperature=0.5)
-        operation = model.run_deferred(
-            [
-                {"role": "system", "text": hokku_ai_context},
-                {"role": "user", "text": hokku_user_request},
-            ]
+    def ya_generate_hokku(self, hokku_user_request: str) -> str:
+        client = openai.OpenAI(
+            api_key=self.ya_iam_token,
+            project=self.ya_cloud_folder_id,
+            base_url="https://ai.api.cloud.yandex.net/v1",
         )
 
-        result = operation.wait()
-        logger.debug(f"Ya AI Studio response is {result=}")
-        return result.alternatives[0].text
+        response = client.responses.create(
+            model=f"gpt://{self.ya_cloud_folder_id}/{self.ya_model}",
+            input=hokku_user_request,
+            temperature=0.8,
+            max_output_tokens=1500,
+        )
+
+        logger.debug(f"Ya AI Studio response is {response=}")
+        return response.output[0].content[0].text  # type: ignore
 
     def ya_search_for_image(self, search_request: str = "Японская живопись", docs_on_page: int = 10) -> list[str]:
         search = self.ya_ai_studio.search_api.image(
@@ -219,7 +231,7 @@ class HbApplication(Application):
         await switch_wks.update_cell(reload_cell_row, reload_cell_col, DONE)
         logger.info("Set reload status to done - we will reload soon")
 
-        logger.info((f"Restarting now sys.argv was {sys.argv} sys.executable was {sys.executable}"))
+        logger.info(f"Restarting now sys.argv was {sys.argv} sys.executable was {sys.executable}")
         os.execv(sys.executable, [os.path.basename(sys.executable)] + sys.argv)
 
     async def send_message_to_admin(self, text: str, parse_mode: str) -> None:

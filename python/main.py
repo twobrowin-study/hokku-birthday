@@ -28,6 +28,7 @@ if __name__ == "__main__":
         .application_class(
             HbApplication,
             kwargs={
+                "zoneinfo": ZoneInfo(TZ),
                 "sheets_link": SHEETS_LINK,
                 "sheets_acc": SHEETS_ACC,
                 "ya_cloud_folder_id": YA_CLOUD_FOLDER_ID,
@@ -53,14 +54,10 @@ if __name__ == "__main__":
 
         asyncio.run(main())
         logger.info("Debug jobs done!")
-        exit(0)
+        sys.exit(0)
 
     app.add_error_handler(ErrorHandler, block=False)  # type: ignore
-    app.add_handler(
-        MessageHandler(
-            ChatType.PRIVATE, callback=PrivateChatMessageHandler, block=False
-        )
-    )
+    app.add_handler(MessageHandler(ChatType.PRIVATE, callback=PrivateChatMessageHandler, block=False))
 
     app.run_polling()
     logger.info("Done, have a greate day!")

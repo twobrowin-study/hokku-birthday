@@ -29,7 +29,9 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
     logger.info("Loaded birthdays data frame")
 
     today = (
-        datetime.today().strftime("%d.%m") if "debug_date" not in context.bot_data else context.bot_data["debug_date"]
+        datetime.now(app.zoneinfo).strftime("%d.%m")
+        if "debug_date" not in context.bot_data
+        else context.bot_data["debug_date"]
     )
     bdays_df = bdays_df.loc[bdays_df["birth_date"] == today]
     if bdays_df.empty:
@@ -76,7 +78,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
 
     bdays_df["hokku"] = bdays_df.apply(
         lambda row: app.ya_generate_hokku(
-            str(app.hokku_ai_context), str(app.hokku_user_request).format(name=row["declension_name"], item=row["item"])
+            str(app.hokku_user_request).format(name=row["declension_name"], item=row["item"]),
         ),
         axis="columns",
     )
@@ -115,7 +117,7 @@ async def HokkuBirthdayJob(context: CallbackContext) -> None:
         finally:
             if iteration == SEND_MESSAGE_RETRIES - 1:
                 logger.warning(f"Could not send message {SEND_MESSAGE_RETRIES} times - exception")
-                raise Exception(f"Could not send message {SEND_MESSAGE_RETRIES} times")
+                raise Exception(f"Could not send message {SEND_MESSAGE_RETRIES} times")  # noqa: TRY002
 
     logger.info("Birthday job done")
 

@@ -27,7 +27,7 @@
 ## Сборка
 
 ```bash
-docker build --platform linux/amd64 . --push -t twobrowin/hokku-birthday:latest
+docker build --platform linux/amd64 . --push -t twobrowin/hokku-birthday:2.6.1
 ```
 
 ## Развёртывание

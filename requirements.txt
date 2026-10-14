@@ -6,3 +6,4 @@ gspread
 gspread-asyncio
 pandas
 yandex-ai-studio-sdk
+openai
